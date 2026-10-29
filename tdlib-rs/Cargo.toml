@@ -36,3 +36,6 @@ serde_with = "3"
 tdlib-rs-gen = { workspace = true }
 tdlib-rs-parser = { workspace = true }
 system-deps = "9"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt"] }

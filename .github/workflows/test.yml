@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [tdlib-rs-parser, tdlib-rs-gen]
+        package: [tdlib-rs-parser, tdlib-rs-gen, tdlib-rs]
 
     name: codecov (${{ matrix.package }})
     runs-on: ubuntu-latest

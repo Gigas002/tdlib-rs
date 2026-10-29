@@ -139,3 +139,93 @@ fn def_contains_only_bare_types<'a>(
 
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn parse(defs: &[&str]) -> Vec<Definition> {
+        defs.iter().map(|d| d.parse().unwrap()).collect()
+    }
+
+    fn find<'a>(defs: &'a [Definition], name: &str) -> &'a Definition {
+        defs.iter().find(|d| d.name == name).unwrap()
+    }
+
+    #[test]
+    fn check_direct_recursion() {
+        let defs = parse(&[
+            "richTextPlain text:string = RichText",
+            "richTextBold text:RichText = RichText",
+        ]);
+        let metadata = Metadata::new(&defs);
+        assert!(!metadata.is_recursive_def(find(&defs, "richTextPlain")));
+        assert!(metadata.is_recursive_def(find(&defs, "richTextBold")));
+    }
+
+    #[test]
+    fn check_indirect_boxed_recursion() {
+        let defs = parse(&[
+            "pageBlockDetails header:RichText = PageBlock",
+            "richTextPlain text:string = RichText",
+            "richTextBlock block:PageBlock = RichText",
+        ]);
+        let metadata = Metadata::new(&defs);
+        assert!(metadata.is_recursive_def(find(&defs, "pageBlockDetails")));
+        assert!(metadata.is_recursive_def(find(&defs, "richTextBlock")));
+        assert!(!metadata.is_recursive_def(find(&defs, "richTextPlain")));
+    }
+
+    #[test]
+    fn check_indirect_bare_recursion() {
+        // A bare type refers to the definition by name, as in TDLib 1.8.68
+        let defs = parse(&[
+            "inlineButton text:RichText = InlineButton",
+            "richTextPlain text:string = RichText",
+            "richTextButton button:inlineButton = RichText",
+        ]);
+        let metadata = Metadata::new(&defs);
+        assert!(metadata.is_recursive_def(find(&defs, "richTextButton")));
+        // Boxing the `RichText` variant already breaks the cycle
+        assert!(!metadata.is_recursive_def(find(&defs, "inlineButton")));
+        assert!(!metadata.is_recursive_def(find(&defs, "richTextPlain")));
+    }
+
+    #[test]
+    fn check_unknown_bare_type_is_not_recursive() {
+        let defs = parse(&["richTextButton button:missingType = RichText"]);
+        let metadata = Metadata::new(&defs);
+        assert!(!metadata.is_recursive_def(find(&defs, "richTextButton")));
+    }
+
+    #[test]
+    fn check_can_implement_default() {
+        let defs = parse(&[
+            "point x:double y:double = Point",
+            "location point:point = Location",
+            "chat type:ChatType = Chat",
+            "chatTypePrivate user_id:int53 = ChatType",
+        ]);
+        let metadata = Metadata::new(&defs);
+        assert!(metadata.can_def_implement_default(find(&defs, "point")));
+        assert!(metadata.can_def_implement_default(find(&defs, "location")));
+        assert!(!metadata.can_def_implement_default(find(&defs, "chat")));
+    }
+
+    #[test]
+    fn check_defs_with_type() {
+        let defs = parse(&[
+            "chatTypePrivate user_id:int53 = ChatType",
+            "chatTypeSecret secret_chat_id:int32 = ChatType",
+            "point x:double y:double = Point",
+        ]);
+        let metadata = Metadata::new(&defs);
+        let ty = "ChatType".parse().unwrap();
+        let names: Vec<_> = metadata
+            .defs_with_type(&ty)
+            .iter()
+            .map(|d| d.name.as_str())
+            .collect();
+        assert_eq!(names, ["chatTypePrivate", "chatTypeSecret"]);
+    }
+}

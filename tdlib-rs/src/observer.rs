@@ -43,3 +43,51 @@ impl Observer {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn notify_subscriber() {
+        let observer = Observer::new();
+        let mut receiver = observer.subscribe(1);
+        assert_eq!(receiver.try_recv(), Ok(None));
+
+        let response = json!({"@type": "ok", "@extra": 1});
+        observer.notify(response.clone());
+        assert_eq!(receiver.try_recv(), Ok(Some(response)));
+        assert!(observer.requests.read().unwrap().is_empty());
+    }
+
+    #[test]
+    fn notify_only_matching_subscriber() {
+        let observer = Observer::new();
+        let mut first = observer.subscribe(1);
+        let mut second = observer.subscribe(2);
+
+        observer.notify(json!({"@extra": 2}));
+        assert_eq!(first.try_recv(), Ok(None));
+        assert_eq!(second.try_recv(), Ok(Some(json!({"@extra": 2}))));
+    }
+
+    #[test]
+    fn notify_unknown_request() {
+        let observer = Observer::new();
+        let mut receiver = observer.subscribe(1);
+
+        observer.notify(json!({"@extra": 2}));
+        assert_eq!(receiver.try_recv(), Ok(None));
+        assert_eq!(observer.requests.read().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn notify_dropped_subscriber() {
+        let observer = Observer::new();
+        drop(observer.subscribe(1));
+
+        observer.notify(json!({"@extra": 1}));
+        assert!(observer.requests.read().unwrap().is_empty());
+    }
+}
