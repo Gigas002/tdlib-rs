@@ -5,8 +5,9 @@
 
 [![Latest version](https://img.shields.io/crates/v/tdlib_rs.svg)](https://crates.io/crates/tdlib_rs)
 [![Documentation](https://docs.rs/tdlib-rs/badge.svg)](https://docs.rs/tdlib-rs/latest/tdlib_rs/)
-[![CI Linux](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/ci-linux.yml)
-<!-- [![CD](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/cd.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/cd.yml) -->
+[![Build](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/build.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/build.yml)
+[![Test](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/test.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/test.yml)
+[![Lint](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/lint.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/lint.yml)
 [![downloads](https://img.shields.io/crates/d/tdlib_rs)](https://crates.io/crates/tdlib_rs)
 ![license](https://img.shields.io/crates/l/tdlib_rs)
 
@@ -67,7 +68,7 @@ Please review the license file provided in the repository for more information r
 
 If you have any questions, suggestions, or feedback, do not hesitate to [contact me](https://federicobruzzone.github.io/).
 
-Mantainers:
+Maintainers:
 
 - [FedericoBruzzone](https://github.com/FedericoBruzzone)
 - [Andreal2000](https://github.com/Andreal2000)
