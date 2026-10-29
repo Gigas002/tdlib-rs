@@ -1,13 +1,13 @@
-[github-license-mit]: https://github.com/FedericoBruzzone/tdlib-rs/blob/main/LICENSE-MIT
-[github-license-apache]: https://github.com/FedericoBruzzone/tdlib-rs/blob/main/LICENSE-APACHE
+[github-license-mit]: https://github.com/Gigas002/tdlib-rs/blob/main/LICENSE-MIT
+[github-license-apache]: https://github.com/Gigas002/tdlib-rs/blob/main/LICENSE-APACHE
 
 # tdlib-rs
 
 [![Latest version](https://img.shields.io/crates/v/tdlib_rs.svg)](https://crates.io/crates/tdlib_rs)
 [![Documentation](https://docs.rs/tdlib-rs/badge.svg)](https://docs.rs/tdlib-rs/latest/tdlib_rs/)
-[![Build](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/build.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/build.yml)
-[![Test](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/test.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/test.yml)
-[![Lint](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/lint.yml/badge.svg)](https://github.com/FedericoBruzzone/tdlib-rs/actions/workflows/lint.yml)
+[![Build](https://github.com/Gigas002/tdlib-rs/actions/workflows/build.yml/badge.svg)](https://github.com/Gigas002/tdlib-rs/actions/workflows/build.yml)
+[![Test](https://github.com/Gigas002/tdlib-rs/actions/workflows/test.yml/badge.svg)](https://github.com/Gigas002/tdlib-rs/actions/workflows/test.yml)
+[![Lint](https://github.com/Gigas002/tdlib-rs/actions/workflows/lint.yml/badge.svg)](https://github.com/Gigas002/tdlib-rs/actions/workflows/lint.yml)
 [![downloads](https://img.shields.io/crates/d/tdlib_rs)](https://crates.io/crates/tdlib_rs)
 ![license](https://img.shields.io/crates/l/tdlib_rs)
 
