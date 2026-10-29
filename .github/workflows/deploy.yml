@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  github-release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+
+  publish-crates-io:
+    needs: github-release
+    strategy:
+      max-parallel: 1
+      matrix:
+        # Dependency order for publishing
+        include:
+          - package: tdlib-rs-parser
+          - package: tdlib-rs-gen
+          # TDLib is not packaged for the runners, so verify without linking tdjson
+          - package: tdlib-rs
+            cargo_args: --features docs
+
+    name: publish (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish crate
+        run: cargo publish -p ${{ matrix.package }} ${{ matrix.cargo_args }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
