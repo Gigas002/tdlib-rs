@@ -12,6 +12,8 @@ Here we write upgrading notes for brands. It's a team effort to make them as str
 
 ### Changed
 
+- Upgraded TDLib to version `1.8.68`.
+
 ### Fixed
 
 ## [1.4.0] - 2026-04-12

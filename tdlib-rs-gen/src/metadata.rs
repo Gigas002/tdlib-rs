@@ -46,7 +46,13 @@ impl<'a> Metadata<'a> {
         });
 
         type_definitions.iter().for_each(|d| {
-            if def_self_references(d, d, &metadata.defs_with_type, &mut HashSet::new()) {
+            if def_self_references(
+                d,
+                d,
+                &metadata.defs_with_type,
+                &type_definition_map,
+                &mut HashSet::new(),
+            ) {
                 metadata.recursing_defs.insert(&d.name);
             }
         });
@@ -80,6 +86,7 @@ fn def_self_references<'a>(
     root: &Definition,
     check: &'a Definition,
     defs_with_type: &'a HashMap<&String, Vec<&Definition>>,
+    definition_map: &'a HashMap<&String, &&Definition>,
     visited: &mut HashSet<&'a String>,
 ) -> bool {
     visited.insert(&check.name);
@@ -88,14 +95,25 @@ fn def_self_references<'a>(
             return true;
         }
 
-        if let Some(defs) = defs_with_type.get(&param.ty.name) {
-            for def in defs {
-                if visited.contains(&def.name) {
-                    continue;
-                }
-                if def_self_references(root, def, defs_with_type, visited) {
-                    return true;
-                }
+        // Bare types refer to a single definition by its name instead of its type
+        let defs: Vec<&Definition> = if param.ty.bare {
+            definition_map
+                .get(&param.ty.name)
+                .map(|def| vec![**def])
+                .unwrap_or_default()
+        } else {
+            defs_with_type
+                .get(&param.ty.name)
+                .cloned()
+                .unwrap_or_default()
+        };
+
+        for def in defs {
+            if visited.contains(&def.name) {
+                continue;
+            }
+            if def_self_references(root, def, defs_with_type, definition_map, visited) {
+                return true;
             }
         }
     }

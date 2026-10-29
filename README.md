@@ -18,7 +18,7 @@ A Rust wrapper around the Telegram Database library. It includes a generator to 
 This crate supports **Linux only** and links against a **system-wide installation** of TDLib.
 TDLib is never downloaded or bundled: building fails if `tdjson` cannot be found.
 
-- `tdjson` (TDLib >= 1.8.61), installed system-wide, e.g. via your distribution's package manager
+- `tdjson` (TDLib >= 1.8.68), installed system-wide, e.g. via your distribution's package manager
   or by building [TDLib](https://github.com/tdlib/td) and installing it with `cmake --install`.
 - `pkg-config`, used at build time to locate `tdjson.pc`.
 
@@ -33,7 +33,7 @@ export LD_LIBRARY_PATH=/opt/tdlib/lib:$LD_LIBRARY_PATH
 
 It's mainly created for using it in the [tgt](https://github.com/FedericoBruzzone/tgt) client, but it should work also for any other Rust project.
 
-Current supported TDLib version: [1.8.61](https://github.com/tdlib/td/commit/11e254af695060d8890024dd7faa1cc2d6685ef8).
+Current supported TDLib version: [1.8.68](https://github.com/tdlib/td/commit/c15d3f5a5de6e3ba5839822c451152e5e18bb700).
 
 ## Cargo features
 

@@ -8,6 +8,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 // Doc comments come verbatim from the TDLib schema and may contain HTML-like text
-#![allow(rustdoc::invalid_html_tags)]
+#![allow(rustdoc::invalid_html_tags, rustdoc::broken_intra_doc_links)]
 
 include!(concat!(env!("OUT_DIR"), "/generated.rs"));
