@@ -34,7 +34,7 @@ impl Observer {
         match self.requests.write().unwrap().remove(&extra) {
             Some(sender) => {
                 if sender.send(response).is_err() {
-                    log::warn!("Got a response of an unaccessible request");
+                    log::warn!("Got a response of an inaccessible request");
                 }
             }
             None => {
