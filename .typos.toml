@@ -1,0 +1,4 @@
+[default.extend-words]
+grammers = "grammers"
+[files]
+extend-exclude = [ "target/", "tdlib-rs/tl/", ]
