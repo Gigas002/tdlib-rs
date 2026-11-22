@@ -4,5 +4,5 @@ A Rust wrapper around the Telegram Database library. It includes a generator to 
 
 ## Requirements
 
-- `tdjson` (TDLib >= 1.8.68), installed system-wide, e.g. via your distribution's package manager or by building [TDLib](https://github.com/tdlib/td) and installing it with `cmake --install`.
+- `tdjson` (TDLib >= 1.8.70), installed system-wide, e.g. via your distribution's package manager or by building [TDLib](https://github.com/tdlib/td) and installing it with `cmake --install`.
 - `pkg-config`, used at build time to locate `tdjson.pc`.
