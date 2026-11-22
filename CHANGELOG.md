@@ -12,7 +12,7 @@ Here we write upgrading notes for brands. It's a team effort to make them as str
 
 ### Changed
 
-- Upgraded TDLib to version `1.8.68`.
+- Upgraded TDLib to version `1.8.70`.
 
 ### Fixed
 
