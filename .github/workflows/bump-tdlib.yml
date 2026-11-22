@@ -1,0 +1,146 @@
+# Opens (or updates) a pull request moving tdlib-rs to the latest TDLib.
+#
+# Weekly (and on demand, optionally for a given version): .github/scripts/bump-tdlib.sh takes
+# the schema from TDLib's "Update version to X." commit and bumps the required version. The
+# result is checked the way CI does (fmt, clippy, tests, docs; with `docs`, since the runners
+# have no tdjson) and pushed to the `bump-tdlib` branch, and a pull request lists the schema
+# changes and the check results. Failing checks make it a draft. It is never merged here: build
+# it against a real tdjson of that version, fix what the new schema broke, then merge by hand.
+#
+# Setup: GITHUB_TOKEN may not open pull requests here ("Allow GitHub Actions to create and
+# approve pull requests" is off), and pull requests it opens wouldn't run the other workflows.
+# Add a BUMP_TOKEN secret: a fine-grained token for this repository with Contents and Pull
+# requests read/write (and Workflows, if the branch should ever carry workflow changes).
+name: bump-tdlib
+
+on:
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "TDLib version (default: the one on TDLib's master)"
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: bump-tdlib
+  cancel-in-progress: false
+
+env:
+  BRANCH: bump-tdlib
+  CARGO_TERM_COLOR: always
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BUMP_TOKEN || github.token }}
+
+      - name: Bump
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ runner.temp }}/summary.md
+          VERSION_INPUT: ${{ inputs.version }}
+        run: |
+          set -o pipefail
+          .github/scripts/bump-tdlib.sh ${VERSION_INPUT:+"$VERSION_INPUT"} | tee -a "$GITHUB_OUTPUT"
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.bump.outputs.changed == 'true'
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        if: steps.bump.outputs.changed == 'true'
+        with:
+          key: bump-tdlib
+
+      # Each check is recorded, not fatal: the pull request is what reports them.
+      - name: Check
+        id: checks
+        if: steps.bump.outputs.changed == 'true'
+        run: |
+          results=${{ runner.temp }}/checks.md
+          echo "| Check | Result |" > "$results"
+          echo "|---|---|" >> "$results"
+          failed=false
+          check() {
+            local name=$1; shift
+            if "$@" > "${{ runner.temp }}/check.log" 2>&1; then
+              echo "| \`$name\` | passed |" >> "$results"
+            else
+              failed=true
+              echo "| \`$name\` | **failed** |" >> "$results"
+              { echo; echo "<details><summary>$name</summary>"; echo; echo '```'
+                grep -E '^(error|warning)' -A12 "${{ runner.temp }}/check.log" | head -80
+                echo '```'; echo "</details>"; } >> "${{ runner.temp }}/failures.md"
+            fi
+          }
+          check "cargo fmt --check" cargo fmt --all -- --check
+          check "cargo clippy --all-features" cargo clippy --workspace --all-targets --all-features -- -D warnings
+          check "cargo clippy --features tdlib-rs/docs" cargo clippy --workspace --all-targets --features tdlib-rs/docs -- -D warnings
+          check "cargo test --all-features" cargo test --workspace --all-features
+          check "cargo test --features tdlib-rs/docs" cargo test --workspace --features tdlib-rs/docs
+          check "cargo doc" env RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features
+          [ -f "${{ runner.temp }}/failures.md" ] && cat "${{ runner.temp }}/failures.md" >> "$results"
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+
+      - name: Push and open the pull request
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.BUMP_TOKEN || github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+          PREVIOUS: ${{ steps.bump.outputs.previous }}
+          FAILED: ${{ steps.checks.outputs.failed }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -q -am "chore: update TDLib to $VERSION"
+
+          # Re-runs of the same bump on the same master push nothing.
+          if git fetch -q origin "$BRANCH" 2>/dev/null && git diff --quiet FETCH_HEAD HEAD; then
+            echo "origin/$BRANCH already has this bump"
+          else
+            git push --force origin "$BRANCH"
+          fi
+
+          {
+            cat "${{ runner.temp }}/summary.md"
+            echo "## Checks"
+            echo
+            echo "Run with the \`docs\` feature where tdjson would be linked: the runners have no TDLib."
+            echo
+            cat "${{ runner.temp }}/checks.md"
+            echo
+            echo "## Before merging"
+            echo
+            echo "- [ ] Build and run against a real tdjson \`$VERSION\` (\`pkg-config --modversion tdjson\`)."
+            echo "- [ ] Fix what the new schema broke in the generator or the hand-written code."
+            echo "- [ ] Note breaking API changes (removed or changed definitions above) in CHANGELOG.md."
+            echo
+            echo "Opened by the bump-tdlib workflow ($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          } > "${{ runner.temp }}/body.md"
+
+          title="chore: update TDLib to $VERSION"
+          pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --title "$title" --body-file "${{ runner.temp }}/body.md"
+          else
+            gh pr create --base master --head "$BRANCH" --title "$title" \
+              --body-file "${{ runner.temp }}/body.md" $( [ "$FAILED" = true ] && echo --draft )
+            pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          fi
+          if [ "$FAILED" = true ]; then
+            gh pr ready "$pr" --undo || true
+          else
+            gh pr ready "$pr" || true
+          fi
